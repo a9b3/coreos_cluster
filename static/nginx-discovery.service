@@ -1,0 +1,34 @@
+[Unit]
+Description=Announce nginx service
+
+# Requires
+Requires=etcd.service
+Requires=nginx.service
+
+# Dependency ordering
+After=etcd.service
+After=nginx.service
+# binds to nginx
+BindsTo=nginx.service
+
+[Service]
+EnvironmentFile=/etc/environment
+
+# update etcdctl key value every 10 seconds
+ExecStart=/bin/sh -c '\
+    while true; do \
+        curl -f ${COREOS_PRIVATE_IPV4}; \
+        if [ $? -eq 0 ]; then \
+            etcdctl set /services/nginx \'${COREOS_PRIVATE_IPV4}\' --ttl 15; \
+        else \
+            etcdctl rm /services/nginx; \
+        fi; \
+        sleep 10; \
+    done'
+
+# on stop remove the key
+ExecStop=/usr/bin/etcdctl rm /services/nginx
+
+[X-Fleet]
+# start this service only on machines running the corresponding nginx
+X-ConditionMachineOf=nginx.service

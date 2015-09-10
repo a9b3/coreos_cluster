@@ -1,0 +1,34 @@
+[Unit]
+Description=Nginx Server
+
+# Requirements
+Requires=etcd.service
+Requires=docker.service
+Requires=nginx-discovery.service
+
+# Dependency ordering
+After=etcd.service
+After=docker.service
+Before=nginx-discovery.service
+
+[Service]
+TimeoutStartSec=0
+
+# exposes $COREOS_PRIVATE_IPV4 var
+EnvironmentFile=/etc/environment
+
+ExecStartPre=-/usr/bin/docker kill nginx
+ExecStartPre=-/usr/bin/docker rm nginx
+ExecStartPre=/usr/bin/docker pull esayemm/nginx_lb
+
+ExecStart=/usr/bin/docker run --name nginx -p 80:80 -v /etc/nginx/sites-enabled:/etc/nginx/conf.d -v /etc/nginx/certs-enabled:/etc/nginx/certs -v /var/log/nginx:/var/log/nginx esayemm/nginx_lb /usr/local/bin/confd-watch
+
+ExecStop=/usr/bin/docker stop nginx
+
+[Install]
+WantedBy=multi-user.target
+
+[X-Fleet]
+# do not run service on machine it is already running on
+Conflicts=nginx.service
+Conflicts=app@*.service
