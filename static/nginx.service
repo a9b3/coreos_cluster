@@ -21,7 +21,7 @@ ExecStartPre=-/usr/bin/docker kill nginx
 ExecStartPre=-/usr/bin/docker rm nginx
 ExecStartPre=/usr/bin/docker pull esayemm/nginx_lb
 
-ExecStart=/usr/bin/docker run --name nginx -p 80:80 -v /etc/nginx/sites-enabled:/etc/nginx/conf.d -v /etc/nginx/certs-enabled:/etc/nginx/certs -v /var/log/nginx:/var/log/nginx esayemm/nginx_lb /usr/local/bin/confd-watch
+ExecStart=/usr/bin/docker run --name nginx -p 80:80 -e HOST_IP=${COREOS_PRIVATE_IPV4} -v /etc/nginx/sites-enabled:/etc/nginx/conf.d -v /etc/nginx/certs-enabled:/etc/nginx/certs -v /var/log/nginx:/var/log/nginx esayemm/nginx_lb /usr/local/bin/confd-watch
 
 ExecStop=/usr/bin/docker stop nginx
 
